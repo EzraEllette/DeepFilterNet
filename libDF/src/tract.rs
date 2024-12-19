@@ -7,11 +7,12 @@ use std::time::Instant;
 use anyhow::{bail, Context, Result};
 use flate2::read::GzDecoder;
 use ini::Ini;
-use ndarray::Axis;
-use ndarray::{s, ArrayView2, ArrayView3, ArrayViewD, ArrayViewMut2, ArrayViewMutD, Ix2};
 use tar::Archive;
 use tract_core::internal::tract_itertools::izip;
 use tract_core::internal::tract_smallvec::alloc::collections::VecDeque;
+use tract_core::ndarray::{
+    s, ArrayView2, ArrayView3, ArrayViewD, ArrayViewMut2, ArrayViewMutD, Axis, Ix2,
+};
 use tract_core::ops;
 use tract_core::prelude::*;
 use tract_onnx::{prelude::*, tract_hir::shapefactoid};
