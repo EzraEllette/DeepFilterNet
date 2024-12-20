@@ -1,8 +1,10 @@
 use std::mem::MaybeUninit;
 
-use ndarray::{prelude::*, Slice};
 use rubato::{FftFixedInOut, Resampler};
 use thiserror::Error;
+use tract_core::ndarray::{
+    s, Array1, Array2, Array3, ArrayView2, ArrayView3, ArrayViewMut3, Axis, Slice,
+};
 
 use crate::*;
 
@@ -16,6 +18,8 @@ pub enum TransformError {
     NdarrayShapeError(#[from] ndarray::ShapeError),
     #[error("Resample Error")]
     ResampleError(#[from] rubato::ResampleError),
+    #[error("Tract Ndarray Shape Error")]
+    TractNdarrayShapeError(#[from] tract_core::ndarray::ShapeError),
 }
 
 pub(crate) fn biquad_norm_inplace<'a, I>(xs: I, mem: &mut [f32; 2], b: &[f32; 2], a: &[f32; 2])
@@ -502,8 +506,10 @@ fn bw_filterbank(center_freqs: &[f32], cutoff_bins: &[f32; 8]) -> Result<Array2<
             o[7] += 1.
         }
     }
-    let sum = out.sum_axis(Axis(0)).into_shape((1, 8))?;
-    Ok(out / sum)
+    let sum = out.sum_axis(Axis(0));
+    let sum = sum.to_shape((1, 8))?;
+    let sum_view = sum.view(); // Create a view that lives long enough
+    Ok(out / sum_view)
 }
 
 /// Compute r2c FFT frequency of given the number of frequencies (`n_fft/2+1`).
@@ -581,6 +587,8 @@ pub(crate) fn estimate_bandwidth(
 #[cfg(test)]
 mod tests {
     use std::sync::Once;
+
+    use tract_core::ndarray::{Array2, Axis}; // Instead of direct ndarray imports
 
     use super::*;
     use crate::util::seed_from_u64;
